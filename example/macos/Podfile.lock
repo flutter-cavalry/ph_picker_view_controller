@@ -1,0 +1,22 @@
+PODS:
+  - FlutterMacOS (1.0.0)
+  - ph_picker_view_controller (0.0.1):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - ph_picker_view_controller (from `Flutter/ephemeral/.symlinks/plugins/ph_picker_view_controller/macos`)
+
+EXTERNAL SOURCES:
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  ph_picker_view_controller:
+    :path: Flutter/ephemeral/.symlinks/plugins/ph_picker_view_controller/macos
+
+SPEC CHECKSUMS:
+  FlutterMacOS: ae6af50a8ea7d6103d888583d46bd8328a7e9811
+  ph_picker_view_controller: a280a353af90e579f36dd211566a1cd1218c2a36
+
+PODFILE CHECKSUM: 418ee398be5f9d237814a931e1790c9b58839c00
+
+COCOAPODS: 1.11.3
