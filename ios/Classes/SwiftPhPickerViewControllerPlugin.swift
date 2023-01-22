@@ -59,12 +59,27 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
         for (i, res) in results.enumerated() {
             res.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.item.identifier) { url, err in
                 // This is a separate thread.
+                var itemError: String?
+                var itemLocalURL: String?
+                
                 if let err = err {
-                    print("Error extracting asset URL: \(err)")
+                    itemError = err.localizedDescription
+                } else if let url = url {
+                    do {
+                        // https://developer.apple.com/documentation/photokit/selecting_photos_and_videos_in_ios
+                        let localURL = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+                        try? FileManager.default.removeItem(at: localURL)
+                        try FileManager.default.copyItem(at: url, to: localURL)
+                        itemLocalURL = localURL.absoluteString
+                    } catch {
+                        itemError = error.localizedDescription
+                    }
                 }
+                
                 self.taskCounterQueue.async {
                     self.completedTasksCounter += 1
-                    outputList[i]["url"] = url?.absoluteString
+                    outputList[i]["url"] = itemLocalURL
+                    outputList[i]["error"] = itemError
                     
                     if self.completedTasksCounter >= results.count {
                         DispatchQueue.main.async {

@@ -6,7 +6,11 @@ A wrapper around iOS `PHPickerViewController` API. (iOS 14+).
 
 ## Usage
 
+`PhPickerViewController.pick`:
+
 ```dart
+final _plugin = PhPickerViewController();
+
 ///
 /// Shows an asset picker backed by `PHPickerViewController`.
 ///
@@ -22,23 +26,30 @@ A wrapper around iOS `PHPickerViewController` API. (iOS 14+).
 /// [preferredAssetRepresentationMode] same as `PHPickerViewController.preferredAssetRepresentationMode`.
 ///
 /// [selection] same as `PHPickerViewController.selection`.
-class PhPickerViewController {
-  Future<List<PHPickerResult>?> pick({
-    Map<String, List<String>>? filter,
-    int? selectionLimit,
-    AssetRepresentationMode? preferredAssetRepresentationMode,
-    Selection? selection,
-    bool? fetchURL,
-  });
+await _plugin.pick(
+        filter: {
+          'any': ['livePhotos', 'videos'],
+        },
+        preferredAssetRepresentationMode: AssetRepresentationMode.current,
+        selection: Selection.ordered,
+        selectionLimit: 3,
+        fetchURL: true,
+      );
+```
 
+`PHPickerResult`:
+
+```dart
 ///
 /// The result type returned by [pick] function.
 ///
 /// [id] asset ID.
 /// [url] asset file URL.
+/// [error] error message.
 class PHPickerResult {
   final String id;
   final String? url;
-  PHPickerResult(this.id, this.url);
+  final String? error;
+  PHPickerResult(this.id, this.url, this.error);
 }
 ```

@@ -9,10 +9,12 @@ enum Selection { def, people, ordered }
 ///
 /// [id] asset ID.
 /// [url] asset file URL.
+/// [error] error message.
 class PHPickerResult {
   final String id;
   final String? url;
-  PHPickerResult(this.id, this.url);
+  final String? error;
+  PHPickerResult(this.id, this.url, this.error);
 }
 
 ///

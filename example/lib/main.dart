@@ -48,7 +48,7 @@ class _MyAppState extends State<MyApp> {
     try {
       var results = await _phPickerViewControllerPlugin.pick(
         filter: {
-          'any': ['livePhotos', 'videos'],
+          'any': ['images', 'videos'],
         },
         preferredAssetRepresentationMode: AssetRepresentationMode.current,
         selection: Selection.ordered,
