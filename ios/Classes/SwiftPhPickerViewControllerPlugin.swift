@@ -168,8 +168,8 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
     }
     
     func filterFromMap(name: String, filterNames: [String]) throws -> PHPickerFilter {
-        let filters = filterNames.map({ filter in
-            return try! filterFromString(s: filter)
+        let filters = try filterNames.map({ filter in
+            return try filterFromString(s: filter)
         })
         switch name {
         case "any":
