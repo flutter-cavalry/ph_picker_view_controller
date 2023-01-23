@@ -31,7 +31,7 @@ class MethodChannelPhPickerViewController
       return null;
     }
     return rawList
-        .map((e) => PHPickerResult(e['id'], e['url'], e['error']))
+        .map((e) => PHPickerResult(e['id'], e['url'], e['path'], e['error']))
         .toList();
   }
 }

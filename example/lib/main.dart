@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:ph_picker_view_controller/ph_picker_view_controller.dart';
 
@@ -13,8 +15,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List<PHPickerResult>? _results;
-  String? _err;
+  String _output = '';
   final _phPickerViewControllerPlugin = PhPickerViewController();
 
   @override
@@ -27,16 +28,16 @@ class _MyAppState extends State<MyApp> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              const Text('Select an asset by clicking the + button'),
-              if (_err != null)
-                Text('Error: $_err')
-              else if (_results != null)
-                ..._results!.map((s) => Text('ID: ${s.id} URL: ${s.url}')),
+              const Text('Pick assets by clicking the + button'),
+              const SizedBox(
+                height: 10,
+              ),
+              Text(_output),
             ],
           ),
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: _select,
+          onPressed: _pickAssets,
           tooltip: 'Select an asset',
           child: const Icon(Icons.add),
         ),
@@ -44,7 +45,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<void> _select() async {
+  Future<void> _pickAssets() async {
     try {
       var results = await _phPickerViewControllerPlugin.pick(
         filter: {
@@ -58,13 +59,27 @@ class _MyAppState extends State<MyApp> {
       if (results == null) {
         return;
       }
+
+      var output = '';
+
+      // Print all file paths and lengths.
+      for (var file in results) {
+        output += 'File info: $file\n';
+
+        if (file.path != null) {
+          var length = await File(file.path!).length();
+          output += 'File length: $length\n';
+        }
+
+        output += '------------\n\n';
+      }
+
       setState(() {
-        _err = null;
-        _results = results;
+        _output = output;
       });
     } catch (err) {
       setState(() {
-        _err = err.toString();
+        _output = err.toString();
       });
     }
   }

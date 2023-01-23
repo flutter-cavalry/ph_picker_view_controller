@@ -1,20 +1,39 @@
 import 'ph_picker_view_controller_platform_interface.dart';
 
+/// [PHPickerConfiguration.AssetRepresentationMode](https://developer.apple.com/documentation/photokit/phpickerconfiguration/assetrepresentationmode).
 enum AssetRepresentationMode { automatic, compatible, current }
 
+/// [PHPickerConfiguration.Selection](https://developer.apple.com/documentation/photokit/phpickerconfiguration/selection).
 enum Selection { def, people, ordered }
 
 ///
 /// The result type returned by [pick] function.
 ///
 /// [id] asset ID.
-/// [url] asset file URL.
+/// [url] asset local URL.
+/// [path] asset local path.
 /// [error] error message.
 class PHPickerResult {
   final String id;
   final String? url;
+  final String? path;
   final String? error;
-  PHPickerResult(this.id, this.url, this.error);
+  PHPickerResult(this.id, this.url, this.path, this.error);
+
+  @override
+  String toString() {
+    var res = 'id: $id';
+    if (url != null) {
+      res += ', url: $url';
+    }
+    if (path != null) {
+      res += ', path: $path';
+    }
+    if (error != null) {
+      res += ', error: $error';
+    }
+    return res;
+  }
 }
 
 ///

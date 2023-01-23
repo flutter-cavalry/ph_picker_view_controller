@@ -60,7 +60,7 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
             res.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.item.identifier) { url, err in
                 // This is a separate thread.
                 var itemError: String?
-                var itemLocalURL: String?
+                var itemLocalURL: URL?
                 
                 if let err = err {
                     itemError = err.localizedDescription
@@ -70,7 +70,7 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
                         let localURL = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
                         try? FileManager.default.removeItem(at: localURL)
                         try FileManager.default.copyItem(at: url, to: localURL)
-                        itemLocalURL = localURL.absoluteString
+                        itemLocalURL = localURL
                     } catch {
                         itemError = error.localizedDescription
                     }
@@ -78,7 +78,8 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
                 
                 self.taskCounterQueue.async {
                     self.completedTasksCounter += 1
-                    outputList[i]["url"] = itemLocalURL
+                    outputList[i]["url"] = itemLocalURL?.absoluteString
+                    outputList[i]["path"] = itemLocalURL?.path
                     outputList[i]["error"] = itemError
                     
                     if self.completedTasksCounter >= results.count {
