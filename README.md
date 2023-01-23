@@ -44,7 +44,8 @@ await _plugin.pick(
 /// The result type returned by [pick] function.
 ///
 /// [id] asset ID.
-/// [url] asset file URL.
+/// [url] asset local URL.
+/// [path] asset local path.
 /// [error] error message.
 class PHPickerResult {
   final String id;

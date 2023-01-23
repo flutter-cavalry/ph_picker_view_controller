@@ -1,3 +1,7 @@
+## 0.0.4
+
+- Add `path` to result type.
+
 ## 0.0.1
 
-* TODO: Describe initial release.
+- Initial release.
