@@ -4,7 +4,7 @@ import 'ph_picker_view_controller_platform_interface.dart';
 enum AssetRepresentationMode { automatic, compatible, current }
 
 /// [PHPickerConfiguration.Selection](https://developer.apple.com/documentation/photokit/phpickerconfiguration/selection).
-enum Selection { def, people, ordered }
+enum Selection { def, ordered }
 
 ///
 /// The result type returned by [pick] function.

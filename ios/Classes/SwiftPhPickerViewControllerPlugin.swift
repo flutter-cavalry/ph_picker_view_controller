@@ -271,12 +271,6 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
     switch s {
     case "def":
       return .default
-    case "people":
-      if #available(iOS 16.0, *) {
-        return .people
-      } else {
-        throw PluginArgumentError("Selection.people requires iOS 16.0")
-      }
     case "ordered":
       return .ordered
     default:
