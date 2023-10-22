@@ -31,7 +31,8 @@ abstract class PhPickerViewControllerPlatform extends PlatformInterface {
     AssetRepresentationMode? preferredAssetRepresentationMode,
     Selection? selection,
     bool? fetchURL,
+    String? fileRepresentation,
   }) {
-    throw UnimplementedError('platformVersion() has not been implemented.');
+    throw UnimplementedError('pick() has not been implemented.');
   }
 }

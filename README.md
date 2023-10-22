@@ -26,6 +26,10 @@ final _plugin = PhPickerViewController();
 /// [preferredAssetRepresentationMode] same as `PHPickerViewController.preferredAssetRepresentationMode`.
 ///
 /// [selection] same as `PHPickerViewController.selection`.
+/// [fileRepresentation] defaults to `UTType.item.identifier`. Use this to
+/// specify the file representation of the picked assets.
+/// For example, live photos are represented as MOV files. To get GIF files,
+/// pass `public.image` instead.
 await _plugin.pick(
         filter: {
           'any': ['livePhotos', 'videos'],

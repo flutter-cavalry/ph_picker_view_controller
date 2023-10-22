@@ -58,12 +58,14 @@ class PhPickerViewController {
     AssetRepresentationMode? preferredAssetRepresentationMode,
     Selection? selection,
     bool? fetchURL,
+    String? fileRepresentation,
   }) {
     return PhPickerViewControllerPlatform.instance.pick(
         filter: filter,
         selectionLimit: selectionLimit,
         preferredAssetRepresentationMode: preferredAssetRepresentationMode,
         selection: selection,
-        fetchURL: fetchURL);
+        fetchURL: fetchURL,
+        fileRepresentation: fileRepresentation);
   }
 }

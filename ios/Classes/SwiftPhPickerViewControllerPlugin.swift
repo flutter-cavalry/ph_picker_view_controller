@@ -30,6 +30,7 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
   
   var completedTasksCounter = 0
   let taskCounterQueue = DispatchQueue(label: "taskCounterQueue")
+  var fileRepresentation: String?
   
   public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
     picker.dismiss(animated: true)
@@ -57,7 +58,7 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
     
     completedTasksCounter = 0
     for (i, res) in results.enumerated() {
-      res.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.item.identifier) { url, err in
+      res.itemProvider.loadFileRepresentation(forTypeIdentifier: fileRepresentation ?? UTType.item.identifier) { url, err in
         // This is a separate thread.
         var itemError: String?
         var itemLocalURL: URL?
@@ -133,7 +134,7 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
         let selectionLimit = args["selectionLimit"] as? Int
         let preferredAssetRepresentationMode = args["preferredAssetRepresentationMode"] as? String
         let selection = args["selection"] as? String
-        
+        fileRepresentation = args["fileRepresentation"] as? String
         resultContext = ResultContext(result: result, fetchURL: fetchURL == true)
         
         var configuration = PHPickerConfiguration(photoLibrary: .shared())

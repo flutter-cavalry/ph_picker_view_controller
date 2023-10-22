@@ -18,6 +18,7 @@ class MethodChannelPhPickerViewController
     AssetRepresentationMode? preferredAssetRepresentationMode,
     Selection? selection,
     bool? fetchURL,
+    String? fileRepresentation,
   }) async {
     var rawList = await methodChannel.invokeMethod<List<dynamic>>('pick', {
       'filter': filter,
@@ -26,6 +27,7 @@ class MethodChannelPhPickerViewController
           preferredAssetRepresentationMode?.name,
       'selection': selection?.name,
       'fetchURL': fetchURL,
+      'fileRepresentation': fileRepresentation,
     });
     if (rawList == null) {
       return null;
