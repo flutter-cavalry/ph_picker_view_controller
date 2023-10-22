@@ -1,3 +1,7 @@
+## 0.2.0
+
+- Add `fileRepresentation` option.
+
 ## 0.1.0
 
 - Update to Flutter 3.7.
