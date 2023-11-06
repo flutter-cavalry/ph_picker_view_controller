@@ -26,74 +26,11 @@ struct ResultContext {
   let fetchURL: Bool
 }
 
-public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPickerViewControllerDelegate {
+public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin {
   
   var completedTasksCounter = 0
   let taskCounterQueue = DispatchQueue(label: "taskCounterQueue")
   var fileRepresentation: String?
-  
-  public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-    picker.dismiss(animated: true)
-    guard let resultContext = resultContext else {
-      return
-    }
-    
-    // User cancelled.
-    if results.isEmpty {
-      DispatchQueue.main.async {
-        resultContext.result(nil)
-        self.resultContext = nil
-      }
-      return
-    }
-    
-    var outputList: [[String: Any?]] = results.map { ["id": $0.assetIdentifier] }
-    if !resultContext.fetchURL {
-      DispatchQueue.main.async {
-        resultContext.result(outputList)
-        self.resultContext = nil
-      }
-      return
-    }
-    
-    completedTasksCounter = 0
-    for (i, res) in results.enumerated() {
-      res.itemProvider.loadFileRepresentation(forTypeIdentifier: fileRepresentation ?? UTType.item.identifier) { url, err in
-        // This is a separate thread.
-        var itemError: String?
-        var itemLocalURL: URL?
-        
-        if let err = err {
-          itemError = err.localizedDescription
-        } else if let url = url {
-          do {
-            // https://developer.apple.com/documentation/photokit/selecting_photos_and_videos_in_ios
-            let localURL = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
-            try? FileManager.default.removeItem(at: localURL)
-            try FileManager.default.copyItem(at: url, to: localURL)
-            itemLocalURL = localURL
-          } catch {
-            itemError = error.localizedDescription
-          }
-        }
-        
-        self.taskCounterQueue.async {
-          self.completedTasksCounter += 1
-          outputList[i]["url"] = itemLocalURL?.absoluteString
-          outputList[i]["path"] = itemLocalURL?.path
-          outputList[i]["error"] = itemError
-          
-          if self.completedTasksCounter >= results.count {
-            DispatchQueue.main.async {
-              resultContext.result(outputList)
-              self.resultContext = nil
-            }
-          }
-        }
-      }
-    }
-  }
-  
   var resultContext: ResultContext?
   
   func currentViewController() -> UIViewController? {
@@ -154,6 +91,7 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
         }
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
+        picker.presentationController?.delegate = self;
         
         currentViewController()?.present(picker, animated: true)
       } catch {
@@ -192,7 +130,10 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
       throw PluginArgumentError("Unknown filter name \(name)")
     }
   }
-  
+}
+
+// Parsing logic.
+extension SwiftPhPickerViewControllerPlugin {
   func filterFromString(s: String) throws -> PHPickerFilter {
     switch s {
     case "bursts":
@@ -278,5 +219,75 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin, PHPicke
       throw PluginArgumentError("Unknown enum value for Selection: \(s)")
     }
   }
-  
+}
+
+extension SwiftPhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
+  public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+    picker.dismiss(animated: true)
+    guard let resultContext = resultContext else {
+      return
+    }
+    
+    // User cancelled.
+    if results.isEmpty {
+      DispatchQueue.main.async {
+        resultContext.result(nil)
+        self.resultContext = nil
+      }
+      return
+    }
+    
+    var outputList: [[String: Any?]] = results.map { ["id": $0.assetIdentifier] }
+    if !resultContext.fetchURL {
+      DispatchQueue.main.async {
+        resultContext.result(outputList)
+        self.resultContext = nil
+      }
+      return
+    }
+    
+    completedTasksCounter = 0
+    for (i, res) in results.enumerated() {
+      res.itemProvider.loadFileRepresentation(forTypeIdentifier: fileRepresentation ?? UTType.item.identifier) { url, err in
+        // This is a separate thread.
+        var itemError: String?
+        var itemLocalURL: URL?
+        
+        if let err = err {
+          itemError = err.localizedDescription
+        } else if let url = url {
+          do {
+            // https://developer.apple.com/documentation/photokit/selecting_photos_and_videos_in_ios
+            let localURL = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+            try? FileManager.default.removeItem(at: localURL)
+            try FileManager.default.copyItem(at: url, to: localURL)
+            itemLocalURL = localURL
+          } catch {
+            itemError = error.localizedDescription
+          }
+        }
+        
+        self.taskCounterQueue.async {
+          self.completedTasksCounter += 1
+          outputList[i]["url"] = itemLocalURL?.absoluteString
+          outputList[i]["path"] = itemLocalURL?.path
+          outputList[i]["error"] = itemError
+          
+          if self.completedTasksCounter >= results.count {
+            DispatchQueue.main.async {
+              resultContext.result(outputList)
+              self.resultContext = nil
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+extension SwiftPhPickerViewControllerPlugin: UIAdaptivePresentationControllerDelegate {
+  public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+    resultContext?.result(nil)
+    self.resultContext = nil
+  }
 }

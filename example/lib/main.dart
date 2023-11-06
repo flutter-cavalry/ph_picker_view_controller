@@ -57,6 +57,9 @@ class _MyAppState extends State<MyApp> {
         fetchURL: true,
       );
       if (results == null) {
+        setState(() {
+          _output = 'No assets selected';
+        });
         return;
       }
 

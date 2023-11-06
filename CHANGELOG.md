@@ -1,3 +1,7 @@
+## 0.2.1
+
+- Fix swiping gesture not detected
+
 ## 0.2.0
 
 - Add `fileRepresentation` option.
