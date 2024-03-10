@@ -6,7 +6,7 @@ A wrapper around iOS `PHPickerViewController` API. (iOS 14+).
 
 ## Usage
 
-`PhPickerViewController.pick`:
+### `pick`
 
 ```dart
 final _plugin = PhPickerViewController();
@@ -57,4 +57,14 @@ class PHPickerResult {
   final String? error;
   PHPickerResult(this.id, this.url, this.error);
 }
+```
+
+### `delete`
+
+```dart
+final _plugin = PhPickerViewController();
+
+final deleted = await _plugin.delete(
+  ids: ['assetID1', 'assetID2'],
+);
 ```

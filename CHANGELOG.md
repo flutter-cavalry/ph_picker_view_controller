@@ -1,3 +1,7 @@
+## 0.3.0
+
+- Add `delete` support.
+
 ## 0.2.1
 
 - Fix swiping gesture not detected
