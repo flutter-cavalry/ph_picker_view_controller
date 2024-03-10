@@ -68,4 +68,8 @@ class PhPickerViewController {
         fetchURL: fetchURL,
         fileRepresentation: fileRepresentation);
   }
+
+  Future<bool> delete(List<String> ids) {
+    return PhPickerViewControllerPlatform.instance.delete(ids);
+  }
 }

@@ -35,4 +35,8 @@ abstract class PhPickerViewControllerPlatform extends PlatformInterface {
   }) {
     throw UnimplementedError('pick() has not been implemented.');
   }
+
+  Future<bool> delete(List<String> ids) {
+    throw UnimplementedError('delete() has not been implemented.');
+  }
 }

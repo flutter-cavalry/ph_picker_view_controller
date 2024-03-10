@@ -100,6 +100,32 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin {
                 }
             }
             
+        case "delete":
+            // Arguments are enforced on dart side.
+            guard let ids = args["ids"] as? [String] else {
+                DispatchQueue.main.async {
+                    result(false)
+                }
+                return
+            }
+            
+            let assets = PHAsset.fetchAssets(withLocalIdentifiers: ids, options: nil)
+            
+            PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.deleteAssets(assets)
+            } completionHandler: { success, error in
+                if success {
+                    DispatchQueue.main.async {
+                        result(true)
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        result(FlutterError(code: "DeleteFailed", message: error?.localizedDescription, details: nil))
+                    }
+                }
+            }
+
+            
         default:
             DispatchQueue.main.async {
                 result(FlutterMethodNotImplemented)

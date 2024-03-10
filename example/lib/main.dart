@@ -16,6 +16,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _output = '';
+  List<PHPickerResult> _results = [];
   final _phPickerViewControllerPlugin = PhPickerViewController();
 
   @override
@@ -26,16 +27,37 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: SingleChildScrollView(
-          child: Column(
-            children: [
-              const Text('Pick assets by clicking the + button'),
-              const SizedBox(
-                height: 10,
-              ),
-              Text(_output),
-            ],
-          ),
-        ),
+            child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Text('Pick assets by clicking the + button'),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Text(_output),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    if (_results.isNotEmpty)
+                      OutlinedButton(
+                          onPressed: () async {
+                            try {
+                              final res = await _phPickerViewControllerPlugin
+                                  .delete(_results.map((e) => e.id).toList());
+                              setState(() {
+                                _output = 'Deleted: $res';
+                                _results = [];
+                              });
+                            } catch (err) {
+                              setState(() {
+                                _output = err.toString();
+                              });
+                            }
+                          },
+                          child: const Text('Delete'))
+                  ],
+                ))),
         floatingActionButton: FloatingActionButton(
           onPressed: _pickAssets,
           tooltip: 'Select an asset',
@@ -59,6 +81,7 @@ class _MyAppState extends State<MyApp> {
       if (results == null) {
         setState(() {
           _output = 'No assets selected';
+          _results = [];
         });
         return;
       }
@@ -79,6 +102,7 @@ class _MyAppState extends State<MyApp> {
 
       setState(() {
         _output = output;
+        _results = results;
       });
     } catch (err) {
       setState(() {
