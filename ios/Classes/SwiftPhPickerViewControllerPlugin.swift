@@ -133,6 +133,14 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin {
 }
 
 extension SwiftPhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
+    private func sendResults(resultContext: ResultContext, results: Any?) {
+        DispatchQueue.main.async {
+            resultContext.result(results)
+            self.resultContext = nil
+            self.fileRepresentation = nil
+        }
+    }
+    
     public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
         guard let resultContext = resultContext else {
@@ -141,19 +149,13 @@ extension SwiftPhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
         
         // User cancelled.
         if results.isEmpty {
-            DispatchQueue.main.async {
-                resultContext.result(nil)
-                self.resultContext = nil
-            }
+            sendResults(resultContext: resultContext, results: nil)
             return
         }
         
         var outputList: [[String: Any?]] = results.map { ["id": $0.assetIdentifier] }
         if !resultContext.fetchURL {
-            DispatchQueue.main.async {
-                resultContext.result(outputList)
-                self.resultContext = nil
-            }
+            sendResults(resultContext: resultContext, results: outputList)
             return
         }
         
@@ -185,10 +187,8 @@ extension SwiftPhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
                     outputList[i]["error"] = itemError
                     
                     if self.completedTasksCounter >= results.count {
-                        DispatchQueue.main.async {
-                            resultContext.result(outputList)
-                            self.resultContext = nil
-                        }
+                        self.sendResults(resultContext: resultContext, results: outputList)
+                        return
                     }
                 }
             }
