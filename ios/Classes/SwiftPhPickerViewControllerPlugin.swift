@@ -29,19 +29,12 @@ struct ResultContext {
 public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin {
     
     var completedTasksCounter = 0
-    let taskCounterQueue = DispatchQueue(label: "taskCounterQueue")
+    let taskCounterQueue = DispatchQueue(label: "ph_picker_view_controller_task_queue")
     var fileRepresentation: String?
     var resultContext: ResultContext?
     
     func currentViewController() -> UIViewController? {
-        var keyWindow: UIWindow?
-        for window in UIApplication.shared.windows {
-            if window.isKeyWindow {
-                keyWindow = window
-                break
-            }
-        }
-        
+        let keyWindow = UIApplication.shared.findKeyWindow()
         var topController = keyWindow?.rootViewController
         while topController?.presentedViewController != nil {
             topController = topController?.presentedViewController
@@ -314,6 +307,26 @@ extension SwiftPhPickerViewControllerPlugin {
             return .ordered
         default:
             throw PluginArgumentError("Unknown enum value for Selection: \(s)")
+        }
+    }
+}
+
+extension UIApplication {
+    func findKeyWindow() -> UIWindow? {
+        if #available(iOS 15.0, *) {
+            return UIApplication
+                .shared
+                .connectedScenes
+                .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+                .last
+        } else if #available(iOS 13.0, *) {
+            return UIApplication
+                .shared
+                .connectedScenes
+                .flatMap { ($0 as? UIWindowScene)?.windows ?? [] }
+                .last { $0.isKeyWindow }
+        } else {
+            return UIApplication.shared.windows.last { $0.isKeyWindow }
         }
     }
 }
