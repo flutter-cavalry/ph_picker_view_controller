@@ -1,3 +1,7 @@
+## 0.4.0
+
+- Better implementation of `findKeyWindow`.
+
 ## 0.3.0
 
 - Add `delete` support.
