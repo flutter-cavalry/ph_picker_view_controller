@@ -117,7 +117,7 @@ public class SwiftPhPickerViewControllerPlugin: NSObject, FlutterPlugin {
                     }
                 }
             }
-
+            
             
         default:
             DispatchQueue.main.async {
