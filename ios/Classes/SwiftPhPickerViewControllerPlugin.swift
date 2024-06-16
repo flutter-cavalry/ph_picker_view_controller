@@ -180,7 +180,7 @@ extension SwiftPhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
         
         completedTasksCounter = 0
         for (i, res) in results.enumerated() {
-            res.itemProvider.loadFileRepresentation(forTypeIdentifier: fileRepresentation ?? UTType.item.identifier) { url, err in
+            res.itemProvider.loadFileRepresentation(forTypeIdentifier: fileRepresentation ?? UTType.data.identifier) { url, err in
                 // This is a separate thread.
                 var itemError: String?
                 var itemLocalURL: URL?
