@@ -1,3 +1,7 @@
+## 0.5.0
+
+- Make `fileRepresentation` default to `UTType.data`.
+
 ## 0.4.0
 
 - Better implementation of `findKeyWindow`.

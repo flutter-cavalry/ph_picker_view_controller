@@ -1,6 +1,6 @@
 name: ph_picker_view_controller
 description: A wrapper around iOS `PHPickerViewController` API.
-version: 0.4.0
+version: 0.5.0
 homepage: https://github.com/flutter-cavalry/ph_picker_view_controller
 
 environment:
@@ -15,7 +15,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.2
+  flutter_lints: ^4.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
