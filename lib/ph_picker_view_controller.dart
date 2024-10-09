@@ -1,10 +1,10 @@
 import 'ph_picker_view_controller_platform_interface.dart';
 
 /// [PHPickerConfiguration.AssetRepresentationMode](https://developer.apple.com/documentation/photokit/phpickerconfiguration/assetrepresentationmode).
-enum AssetRepresentationMode { automatic, compatible, current }
+enum PHPickerAssetRepresentationMode { automatic, compatible, current }
 
 /// [PHPickerConfiguration.Selection](https://developer.apple.com/documentation/photokit/phpickerconfiguration/selection).
-enum Selection { def, ordered }
+enum PHPickerSelection { defaultSelection, ordered }
 
 /// The result type returned from [pick] function.
 ///
@@ -80,8 +80,8 @@ class PhPickerViewController {
   Future<List<PHPickerResult>?> pick({
     Map<String, List<String>>? filter,
     int? selectionLimit,
-    AssetRepresentationMode? preferredAssetRepresentationMode,
-    Selection? selection,
+    PHPickerAssetRepresentationMode? preferredAssetRepresentationMode,
+    PHPickerSelection? selection,
     String? fileRepresentation,
     bool? appendLiveVideos,
   }) {

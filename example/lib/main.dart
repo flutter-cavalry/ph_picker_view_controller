@@ -73,8 +73,9 @@ class _MyAppState extends State<MyApp> {
         filter: {
           'any': ['images', 'videos'],
         },
-        preferredAssetRepresentationMode: AssetRepresentationMode.current,
-        selection: Selection.ordered,
+        preferredAssetRepresentationMode:
+            PHPickerAssetRepresentationMode.current,
+        selection: PHPickerSelection.ordered,
         selectionLimit: 3,
         appendLiveVideos: true,
       );

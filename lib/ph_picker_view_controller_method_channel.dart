@@ -15,8 +15,8 @@ class MethodChannelPhPickerViewController
   Future<List<PHPickerResult>?> pick({
     Map<String, List<String>>? filter,
     int? selectionLimit,
-    AssetRepresentationMode? preferredAssetRepresentationMode,
-    Selection? selection,
+    PHPickerAssetRepresentationMode? preferredAssetRepresentationMode,
+    PHPickerSelection? selection,
     String? fileRepresentation,
     bool? appendLiveVideos,
   }) async {
