@@ -30,13 +30,13 @@ final _plugin = PhPickerViewController();
 /// [appendLiveVideos] If true, appends Live Photo video assets to the results.
 /// Use [PHPickerResult.liveVideoUrl] and [PHPickerResult.liveVideoPath] to access them.
 await _plugin.pick(
-        filter: {
-          'any': ['livePhotos', 'videos'],
-        },
-        preferredAssetRepresentationMode: AssetRepresentationMode.current,
-        selection: Selection.ordered,
-        selectionLimit: 3,
-      );
+  filter: {
+    'any': ['livePhotos', 'videos'],
+  },
+  preferredAssetRepresentationMode: PHPickerAssetRepresentationMode.current,
+  selection: PHPickerSelection.ordered,
+  selectionLimit: 3,
+);
 ```
 
 `PHPickerResult`:

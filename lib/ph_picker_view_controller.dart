@@ -94,6 +94,9 @@ class PhPickerViewController {
         appendLiveVideos: appendLiveVideos);
   }
 
+  /// Deletes assets by their IDs.
+  ///
+  /// [ids] asset IDs.
   Future<bool> delete(List<String> ids) {
     return PhPickerViewControllerPlatform.instance.delete(ids);
   }
