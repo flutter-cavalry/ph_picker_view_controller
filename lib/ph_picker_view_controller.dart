@@ -6,67 +6,92 @@ enum AssetRepresentationMode { automatic, compatible, current }
 /// [PHPickerConfiguration.Selection](https://developer.apple.com/documentation/photokit/phpickerconfiguration/selection).
 enum Selection { def, ordered }
 
-///
-/// The result type returned by [pick] function.
+/// The result type returned from [pick] function.
 ///
 /// [id] asset ID.
 /// [url] asset local URL.
 /// [path] asset local path.
+/// [liveVideoUrl] live video local URL.
+/// [liveVideoPath] live video local path.
 /// [error] error message.
 class PHPickerResult {
   final String id;
   final String? url;
   final String? path;
+  final String? liveVideoUrl;
+  final String? liveVideoPath;
+
   final String? error;
-  PHPickerResult(this.id, this.url, this.path, this.error);
+  PHPickerResult(this.id, this.url, this.path, this.liveVideoUrl,
+      this.liveVideoPath, this.error);
+
+  static PHPickerResult fromMap(Map<dynamic, dynamic> map) {
+    return PHPickerResult(
+      map['id'],
+      map['url'],
+      map['path'],
+      map['liveVideoUrl'],
+      map['liveVideoPath'],
+      map['error'],
+    );
+  }
 
   @override
   String toString() {
     var res = 'id: $id';
     if (url != null) {
-      res += ', url: $url';
+      res += '\nurl: $url';
     }
     if (path != null) {
-      res += ', path: $path';
+      res += '\npath: $path';
+    }
+    if (liveVideoUrl != null) {
+      res += '\nliveVideoUrl: $liveVideoUrl';
+    }
+    if (liveVideoPath != null) {
+      res += '\nliveVideoPath: $liveVideoPath';
     }
     if (error != null) {
-      res += ', error: $error';
+      res += '\nerror: $error';
     }
     return res;
   }
 }
 
-///
-/// Shows an asset picker backed by `PHPickerViewController`.
-///
-/// [fetchURL] fetches file URLs. By default, only asset IDs are returned.
-///
-/// [filter] same as `PHPickerViewController.filter`.
-/// Example:
-/// `{'any': ['livePhotos', 'videos']}` is equivalent to
-/// `PHPickerFilter.any(of: [.livePhotos, .videos])`.
-///
-/// [selectionLimit] same as `PHPickerViewController.selectionLimit`.
-///
-/// [preferredAssetRepresentationMode] same as `PHPickerViewController.preferredAssetRepresentationMode`.
-///
-/// [selection] same as `PHPickerViewController.selection`.
 class PhPickerViewController {
+  /// Shows an asset picker backed by `PHPickerViewController`.
+  ///
+  /// [filter] same as `PHPickerViewController.filter`.
+  /// Example:
+  /// `{'any': ['livePhotos', 'videos']}` is equivalent to
+  /// `PHPickerFilter.any(of: [.livePhotos, .videos])`.
+  ///
+  /// [selectionLimit] same as `PHPickerViewController.selectionLimit`.
+  ///
+  /// [preferredAssetRepresentationMode] same as `PHPickerViewController.preferredAssetRepresentationMode`.
+  ///
+  /// [selection] same as `PHPickerViewController.selection`.
+  ///
+  /// [fileRepresentation] same as `PHPickerViewController.fileRepresentation`.
+  /// Defaults to `UTType.data.identifier`.
+  ///
+  /// [appendLiveVideos] If true, appends Live Photo video assets to the results.
+  /// Use [PHPickerResult.liveVideoUrl] and [PHPickerResult.liveVideoPath] to access them.
   Future<List<PHPickerResult>?> pick({
     Map<String, List<String>>? filter,
     int? selectionLimit,
     AssetRepresentationMode? preferredAssetRepresentationMode,
     Selection? selection,
-    bool? fetchURL,
     String? fileRepresentation,
+    bool? appendLiveVideos,
   }) {
     return PhPickerViewControllerPlatform.instance.pick(
         filter: filter,
         selectionLimit: selectionLimit,
         preferredAssetRepresentationMode: preferredAssetRepresentationMode,
         selection: selection,
-        fetchURL: fetchURL,
-        fileRepresentation: fileRepresentation);
+        fileRepresentation: fileRepresentation,
+        appendLiveVideos: appendLiveVideos);
   }
 
   Future<bool> delete(List<String> ids) {

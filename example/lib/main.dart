@@ -76,7 +76,7 @@ class _MyAppState extends State<MyApp> {
         preferredAssetRepresentationMode: AssetRepresentationMode.current,
         selection: Selection.ordered,
         selectionLimit: 3,
-        fetchURL: true,
+        appendLiveVideos: true,
       );
       if (results == null) {
         setState(() {

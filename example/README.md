@@ -15,8 +15,6 @@ final _plugin = PhPickerViewController();
 ///
 /// Shows an asset picker backed by `PHPickerViewController`.
 ///
-/// [fetchURL] fetches file URLs. By default, only asset IDs are returned.
-///
 /// [filter] same as `PHPickerViewController.filter`.
 /// Example:
 /// `{'any': ['livePhotos', 'videos']}` is equivalent to
@@ -34,6 +32,5 @@ await _plugin.pick(
         preferredAssetRepresentationMode: AssetRepresentationMode.current,
         selection: Selection.ordered,
         selectionLimit: 3,
-        fetchURL: true,
       );
 ```

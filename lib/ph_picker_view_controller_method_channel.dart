@@ -17,8 +17,8 @@ class MethodChannelPhPickerViewController
     int? selectionLimit,
     AssetRepresentationMode? preferredAssetRepresentationMode,
     Selection? selection,
-    bool? fetchURL,
     String? fileRepresentation,
+    bool? appendLiveVideos,
   }) async {
     var rawList = await methodChannel.invokeMethod<List<dynamic>>('pick', {
       'filter': filter,
@@ -26,15 +26,13 @@ class MethodChannelPhPickerViewController
       'preferredAssetRepresentationMode':
           preferredAssetRepresentationMode?.name,
       'selection': selection?.name,
-      'fetchURL': fetchURL,
       'fileRepresentation': fileRepresentation,
+      'appendLiveVideos': appendLiveVideos,
     });
     if (rawList == null) {
       return null;
     }
-    return rawList
-        .map((e) => PHPickerResult(e['id'], e['url'], e['path'], e['error']))
-        .toList();
+    return rawList.map((e) => PHPickerResult.fromMap(e)).toList();
   }
 
   @override

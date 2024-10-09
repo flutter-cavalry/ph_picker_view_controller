@@ -30,8 +30,8 @@ abstract class PhPickerViewControllerPlatform extends PlatformInterface {
     int? selectionLimit,
     AssetRepresentationMode? preferredAssetRepresentationMode,
     Selection? selection,
-    bool? fetchURL,
     String? fileRepresentation,
+    bool? appendLiveVideos,
   }) {
     throw UnimplementedError('pick() has not been implemented.');
   }
