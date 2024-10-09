@@ -1,6 +1,6 @@
 name: ph_picker_view_controller
 description: A wrapper around iOS `PHPickerViewController` API.
-version: 0.5.0
+version: 0.6.0
 homepage: https://github.com/flutter-cavalry/ph_picker_view_controller
 
 environment:

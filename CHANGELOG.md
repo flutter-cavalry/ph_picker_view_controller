@@ -1,3 +1,8 @@
+## 0.6.0
+
+- Support live photos.
+- Add prefixes to some types.
+
 ## 0.5.0
 
 - Make `fileRepresentation` default to `UTType.data`.
