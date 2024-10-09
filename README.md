@@ -1,6 +1,6 @@
-[![pub package](https://img.shields.io/pub/v/ph_picker_view_controller.svg)](https://pub.dev/packages/ph_picker_view_controller)
-
 # ph_picker_view_controller
+
+[![pub package](https://img.shields.io/pub/v/ph_picker_view_controller.svg)](https://pub.dev/packages/ph_picker_view_controller)
 
 A wrapper around iOS `PHPickerViewController` API. (iOS 14+).
 
@@ -11,7 +11,6 @@ A wrapper around iOS `PHPickerViewController` API. (iOS 14+).
 ```dart
 final _plugin = PhPickerViewController();
 
-///
 /// Shows an asset picker backed by `PHPickerViewController`.
 ///
 /// [filter] same as `PHPickerViewController.filter`.
@@ -24,10 +23,12 @@ final _plugin = PhPickerViewController();
 /// [preferredAssetRepresentationMode] same as `PHPickerViewController.preferredAssetRepresentationMode`.
 ///
 /// [selection] same as `PHPickerViewController.selection`.
-/// [fileRepresentation] defaults to `UTType.item.identifier`. Use this to
-/// specify the file representation of the picked assets.
-/// For example, live photos are represented as MOV files. To get GIF files,
-/// pass `public.image` instead.
+///
+/// [fileRepresentation] same as `PHPickerViewController.fileRepresentation`.
+/// Defaults to `UTType.data.identifier`.
+///
+/// [appendLiveVideos] If true, appends Live Photo video assets to the results.
+/// Use [PHPickerResult.liveVideoUrl] and [PHPickerResult.liveVideoPath] to access them.
 await _plugin.pick(
         filter: {
           'any': ['livePhotos', 'videos'],
@@ -41,18 +42,20 @@ await _plugin.pick(
 `PHPickerResult`:
 
 ```dart
-///
-/// The result type returned by [pick] function.
+/// The result type returned from [pick] function.
 ///
 /// [id] asset ID.
 /// [url] asset local URL.
 /// [path] asset local path.
+/// [liveVideoUrl] live video local URL.
+/// [liveVideoPath] live video local path.
 /// [error] error message.
 class PHPickerResult {
   final String id;
   final String? url;
-  final String? error;
-  PHPickerResult(this.id, this.url, this.error);
+  final String? path;
+  final String? liveVideoUrl;
+  final String? liveVideoPath;
 }
 ```
 
