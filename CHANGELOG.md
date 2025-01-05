@@ -1,3 +1,7 @@
+## 0.7.0
+
+- Add Swift Package Manager support.
+
 ## 0.6.0
 
 - Support live photos.
