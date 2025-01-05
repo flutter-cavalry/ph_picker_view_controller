@@ -1,36 +1,16 @@
 # ph_picker_view_controller_example
 
+Demonstrates how to use the ph_picker_view_controller plugin.
+
 ## Getting Started
 
-To run this example project locally.
+This project is a starting point for a Flutter application.
 
-- cd `example`
-- `flutter run -d <your device>`
+A few resources to get you started if this is your first Flutter project:
 
-## Usage
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-```dart
-final _plugin = PhPickerViewController();
-
-///
-/// Shows an asset picker backed by `PHPickerViewController`.
-///
-/// [filter] same as `PHPickerViewController.filter`.
-/// Example:
-/// `{'any': ['livePhotos', 'videos']}` is equivalent to
-/// `PHPickerFilter.any(of: [.livePhotos, .videos])`.
-///
-/// [selectionLimit] same as `PHPickerViewController.selectionLimit`.
-///
-/// [preferredAssetRepresentationMode] same as `PHPickerViewController.preferredAssetRepresentationMode`.
-///
-/// [selection] same as `PHPickerViewController.selection`.
-await _plugin.pick(
-        filter: {
-          'any': ['livePhotos', 'videos'],
-        },
-        preferredAssetRepresentationMode: AssetRepresentationMode.current,
-        selection: Selection.ordered,
-        selectionLimit: 3,
-      );
-```
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
