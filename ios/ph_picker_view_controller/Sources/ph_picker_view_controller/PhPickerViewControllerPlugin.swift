@@ -111,22 +111,46 @@ public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
         }
         return
       }
-
-      let assets = PHAsset.fetchAssets(withLocalIdentifiers: ids, options: nil)
-
-      PHPhotoLibrary.shared().performChanges {
-        PHAssetChangeRequest.deleteAssets(assets)
-      } completionHandler: { success, error in
-        if success {
+      
+      func performDelete() {
+        let assetsToDelete = PHAsset.fetchAssets(withLocalIdentifiers: ids, options: nil)
+        if assetsToDelete.count == 0 {
           DispatchQueue.main.async {
-            result(true)
+            result(FlutterError(code: "AssetsNotFound", message: nil, details: nil))
           }
-        } else {
+          return
+        }
+
+        PHPhotoLibrary.shared().performChanges {
+          PHAssetChangeRequest.deleteAssets(assetsToDelete)
+        } completionHandler: { success, _ in
           DispatchQueue.main.async {
-            result(
-              FlutterError(code: "DeleteFailed", message: error?.localizedDescription, details: nil)
-            )
+            if success {
+              result(true)
+            } else {
+              result(FlutterError(code: "DeleteFailed", message: nil, details: nil))
+            }
           }
+        }
+      }
+      
+      let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+      switch status {
+      case .authorized, .limited:
+        performDelete()
+      case .notDetermined:
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { newStatus in
+          DispatchQueue.main.async {
+            if newStatus == .authorized || newStatus == .limited {
+              performDelete()
+            } else {
+              result(FlutterError(code: "PermissionDenied", message: nil, details: nil))
+            }
+          }
+        }
+      default:
+        DispatchQueue.main.async {
+          result(FlutterError(code: "PermissionDenied", message: nil, details: nil))
         }
       }
 
