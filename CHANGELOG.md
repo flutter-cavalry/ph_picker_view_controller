@@ -1,3 +1,7 @@
+## 0.7.1
+
+- Handle more permission issues.
+
 ## 0.7.0
 
 - Add Swift Package Manager support.
