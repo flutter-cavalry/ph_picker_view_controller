@@ -308,7 +308,7 @@ extension PhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
   private func createTmpDir() -> URL {
     let dirName = "_FLT_PH_\(Date().timeIntervalSince1970)"
     let tmpDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
-    let dirUrl = tmpDir.appendingPathComponent(dirName)
+    let dirUrl = tmpDir.appendingPathComponent("_app").appendingPathComponent(dirName)
     try? FileManager.default.createDirectory(at: dirUrl, withIntermediateDirectories: true)
     return dirUrl
   }
