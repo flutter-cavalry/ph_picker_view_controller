@@ -21,10 +21,12 @@ class ResultContext {
   let flutterRes: FlutterResult
   let fileRepresentation: String
   let appendLiveVideos: Bool
+  var didFinishPicking = false
 
   var totalCount: Int = -1
   var completedTasksCounter = 0
   var files: [[String: Any?]] = []
+  var completedIndices = Set<Int>()
 
   init(flutterRes: @escaping FlutterResult, fileRepresentation: String, appendLiveVideos: Bool) {
     self.flutterRes = flutterRes
@@ -34,23 +36,19 @@ class ResultContext {
 }
 
 public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
+  weak var registrar: FlutterPluginRegistrar?
 
   let resultContextQueue = DispatchQueue(label: "ph_picker_view_controller_task_queue")
   var resultContext: ResultContext?
 
-  func currentViewController() -> UIViewController? {
-    let keyWindow = UIApplication.shared.findKeyWindow()
-    var topController = keyWindow?.rootViewController
-    while topController?.presentedViewController != nil {
-      topController = topController?.presentedViewController
-    }
-    return topController
+  init(registrar: FlutterPluginRegistrar) {
+    self.registrar = registrar
   }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(
       name: "ph_picker_view_controller", binaryMessenger: registrar.messenger())
-    let instance = PhPickerViewControllerPlugin()
+    let instance = PhPickerViewControllerPlugin(registrar: registrar)
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 
@@ -63,6 +61,14 @@ public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
     }
     switch call.method {
     case "pick":
+      guard resultContext == nil else {
+        DispatchQueue.main.async {
+          result(
+            FlutterError(
+              code: "PickerAlreadyPresented", message: "A picker is already active", details: nil))
+        }
+        return
+      }
       do {
         // Arguments are enforced on dart side.
         let filterMap = args["filter"] as? [String: [String]]
@@ -90,12 +96,20 @@ public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
         }
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
-        picker.presentationController?.delegate = self
 
         resultContext = ResultContext(
           flutterRes: result, fileRepresentation: fileRepresentation,
           appendLiveVideos: appendLiveVideos)
-        currentViewController()?.present(picker, animated: true)
+        guard let viewController = currentViewController() else {
+          resultContext = nil
+          result(
+            FlutterError(
+              code: "NoViewController", message: "Could not find a view controller", details: nil))
+          return
+        }
+        viewController.present(picker, animated: true) {
+          picker.presentationController?.delegate = self
+        }
       } catch {
         DispatchQueue.main.async {
           result(
@@ -111,7 +125,7 @@ public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
         }
         return
       }
-      
+
       func performDelete() {
         let assetsToDelete = PHAsset.fetchAssets(withLocalIdentifiers: ids, options: nil)
         if assetsToDelete.count == 0 {
@@ -133,7 +147,7 @@ public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
           }
         }
       }
-      
+
       let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
       switch status {
       case .authorized, .limited:
@@ -161,6 +175,21 @@ public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
     }
   }
 
+  private func currentViewController() -> UIViewController? {
+    guard
+      let keyWindow = self.registrar?.viewController?.view.window?.windowScene?.keyWindow
+    else {
+      return nil
+    }
+
+    var topController = keyWindow.rootViewController
+    while let presented = topController?.presentedViewController {
+      topController = presented
+    }
+
+    return topController
+  }
+
   func filterFromMap(name: String, filterNames: [String]) throws -> PHPickerFilter {
     let filters = try filterNames.map({ filter in
       return try filterFromString(s: filter)
@@ -169,6 +198,9 @@ public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
     case "any":
       return PHPickerFilter.any(of: filters)
     case "not":
+      guard filters.count == 1 else {
+        throw PluginArgumentError("not filter requires exactly one filter")
+      }
       if #available(iOS 15.0, *) {
         return PHPickerFilter.not(filters[0])
       } else {
@@ -187,106 +219,131 @@ public class PhPickerViewControllerPlugin: NSObject, FlutterPlugin {
 }
 
 extension PhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
-  private func sendResultsToFlutter(results: Any?) {
+  private func sendResultsToFlutter(context: ResultContext, results: Any?) {
     DispatchQueue.main.async {
-      self.resultContext?.flutterRes(results)
+      guard self.resultContext === context else {
+        return
+      }
+      context.flutterRes(results)
       self.resultContext = nil
     }
   }
 
   public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-    picker.dismiss(animated: true)
-    guard let resultContext = resultContext else {
+    guard let context = resultContext else {
       return
     }
+    context.didFinishPicking = true
+    picker.dismiss(animated: true)
 
     // User cancelled.
     if results.isEmpty {
-      sendResultsToFlutter(results: nil)
+      sendResultsToFlutter(context: context, results: nil)
       return
     }
 
     // Update context file count.
-    resultContext.totalCount = results.count
+    context.totalCount = results.count
+    context.files = Array(repeating: [:], count: results.count)
     let tmpDir = createTmpDir()
 
-    for (_, pickerRes) in results.enumerated() {
+    for (resultIndex, pickerRes) in results.enumerated() {
       let ip = pickerRes.itemProvider
       let assetIdentifier = pickerRes.assetIdentifier
 
-      if resultContext.appendLiveVideos && ip.canLoadObject(ofClass: PHLivePhoto.self) {
+      if context.appendLiveVideos && ip.canLoadObject(ofClass: PHLivePhoto.self) {
         // Live photo.
         ip.loadObject(ofClass: PHLivePhoto.self) { livePhoto, err in
           if let err = err {
             self.completeSingleFile(
-              err: err.localizedDescription, assetID: assetIdentifier, url: nil, liveVideo: nil)
+              context: context, index: resultIndex, err: err.localizedDescription,
+              assetID: assetIdentifier, url: nil, liveVideo: nil)
             return
           }
           guard let livePhoto = livePhoto as? PHLivePhoto else {
             self.completeSingleFile(
-              err: "Unexpected nil live photo data", assetID: assetIdentifier, url: nil,
-              liveVideo: nil)
+              context: context, index: resultIndex, err: "Unexpected nil live photo data",
+              assetID: assetIdentifier, url: nil, liveVideo: nil)
             return
           }
-          self.handleLivePhto(pickerRes: pickerRes, tmpDir: tmpDir, livePhoto: livePhoto)
+          self.handleLivePhto(
+            context: context, index: resultIndex, pickerRes: pickerRes, tmpDir: tmpDir,
+            livePhoto: livePhoto)
         }
-      } else if ip.hasRepresentationConforming(toTypeIdentifier: resultContext.fileRepresentation) {
-        ip.loadFileRepresentation(forTypeIdentifier: resultContext.fileRepresentation) { url, err in
+      } else if ip.hasRepresentationConforming(toTypeIdentifier: context.fileRepresentation) {
+        ip.loadFileRepresentation(forTypeIdentifier: context.fileRepresentation) { url, err in
           if let err = err {
             self.completeSingleFile(
-              err: err.localizedDescription, assetID: assetIdentifier, url: nil, liveVideo: nil)
+              context: context, index: resultIndex, err: err.localizedDescription,
+              assetID: assetIdentifier, url: nil, liveVideo: nil)
             return
           }
           guard let url = url else {
             self.completeSingleFile(
-              err: "URL not supported on this representation", assetID: assetIdentifier, url: url,
-              liveVideo: nil)
+              context: context, index: resultIndex,
+              err: "URL not supported on this representation", assetID: assetIdentifier,
+              url: nil, liveVideo: nil)
             return
           }
-          self.handleDefaultFile(pickerRes: pickerRes, tmpDir: tmpDir, url: url)
+          self.handleDefaultFile(
+            context: context, index: resultIndex, pickerRes: pickerRes, tmpDir: tmpDir, url: url)
         }
       } else {
         completeSingleFile(
-          err: "Representation not supported", assetID: pickerRes.assetIdentifier, url: nil,
-          liveVideo: nil)
+          context: context, index: resultIndex, err: "Representation not supported",
+          assetID: pickerRes.assetIdentifier, url: nil, liveVideo: nil)
       }
     }
   }
 
   // Callback from `loadFileRepresentation` is in a worker thread.
-  private func handleDefaultFile(pickerRes: PHPickerResult, tmpDir: URL, url: URL) {
+  private func handleDefaultFile(
+    context: ResultContext, index: Int, pickerRes: PHPickerResult, tmpDir: URL, url: URL
+  ) {
     let id = pickerRes.assetIdentifier
     do {
       // https://developer.apple.com/documentation/photokit/selecting_photos_and_videos_in_ios
-      let localURL = tmpDir.appendingPathComponent(url.lastPathComponent)
+      let localURL = tmpDir.appendingPathComponent("\(UUID().uuidString)_\(url.lastPathComponent)")
       try FileManager.default.copyItem(at: url, to: localURL)
-      completeSingleFile(err: nil, assetID: id, url: localURL, liveVideo: nil)
+      completeSingleFile(
+        context: context, index: index, err: nil, assetID: id, url: localURL, liveVideo: nil)
     } catch {
-      completeSingleFile(err: error.localizedDescription, assetID: id, url: nil, liveVideo: nil)
+      completeSingleFile(
+        context: context, index: index, err: error.localizedDescription, assetID: id, url: nil,
+        liveVideo: nil)
     }
   }
 
   // Callback from `loadFileRepresentation` is in a worker thread.
-  private func handleLivePhto(pickerRes: PHPickerResult, tmpDir: URL, livePhoto: PHLivePhoto) {
+  private func handleLivePhto(
+    context: ResultContext, index: Int, pickerRes: PHPickerResult, tmpDir: URL,
+    livePhoto: PHLivePhoto
+  ) {
     let id = pickerRes.assetIdentifier
     saveLivePhotoComponents(livePhoto: livePhoto, tmpDir: tmpDir) {
       (result: Result<(imageURL: URL, videoURL: URL), any Error>) in
       switch result {
       case .success(let (imageURL, videoURL)):
-        self.completeSingleFile(err: nil, assetID: id, url: imageURL, liveVideo: videoURL)
+        self.completeSingleFile(
+          context: context, index: index, err: nil, assetID: id, url: imageURL,
+          liveVideo: videoURL)
       case .failure(let innerErr):
         self.completeSingleFile(
-          err: innerErr.localizedDescription, assetID: id, url: nil, liveVideo: nil)
+          context: context, index: index, err: innerErr.localizedDescription, assetID: id,
+          url: nil, liveVideo: nil)
       }
     }
   }
 
-  private func completeSingleFile(err: String?, assetID: String?, url: URL?, liveVideo: URL?) {
+  private func completeSingleFile(
+    context: ResultContext, index: Int, err: String?, assetID: String?, url: URL?, liveVideo: URL?
+  ) {
     self.resultContextQueue.async {
-      guard let resultContext = self.resultContext else {
+      guard context.files.indices.contains(index), context.completedIndices.insert(index).inserted
+      else {
         return
       }
-      resultContext.completedTasksCounter += 1
+      context.completedTasksCounter += 1
 
       let map: [String: Any?] = [
         "id": assetID,
@@ -296,10 +353,10 @@ extension PhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
         "liveVideoPath": liveVideo?.path,
         "error": err,
       ]
-      resultContext.files.append(map)
+      context.files[index] = map
 
-      if resultContext.completedTasksCounter >= resultContext.totalCount {
-        self.sendResultsToFlutter(results: resultContext.files)
+      if context.completedTasksCounter >= context.totalCount {
+        self.sendResultsToFlutter(context: context, results: context.files)
         return
       }
     }
@@ -307,7 +364,9 @@ extension PhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
 
   private func createTmpDir() -> URL {
     let dirName = "_FLT_PH_\(Date().timeIntervalSince1970)"
-    let tmpDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
+    let tmpDir =
+      FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+      ?? FileManager.default.temporaryDirectory
     let dirUrl = tmpDir.appendingPathComponent("_app").appendingPathComponent(dirName)
     try? FileManager.default.createDirectory(at: dirUrl, withIntermediateDirectories: true)
     return dirUrl
@@ -343,47 +402,57 @@ extension PhPickerViewControllerPlugin: PHPickerViewControllerDelegate {
     let imageFileName = imageResource.originalFilename
     let videoFileName = videoResource.originalFilename
 
-    let imageFileURL = tmpDir.appendingPathComponent(imageFileName)
-    let videoFileURL = tmpDir.appendingPathComponent(videoFileName)
+    let uniquePrefix = UUID().uuidString
+    let imageFileURL = tmpDir.appendingPathComponent("\(uniquePrefix)_\(imageFileName)")
+    let videoFileURL = tmpDir.appendingPathComponent("\(uniquePrefix)_\(videoFileName)")
 
     let resourceManager = PHAssetResourceManager.default()
+    let completionQueue = DispatchQueue(label: "ph_picker_view_controller_live_photo_queue")
     var imageSaved = false
     var videoSaved = false
+    var didComplete = false
 
-    // Helper function to check if both resources are saved
-    func checkCompletion() {
-      if imageSaved && videoSaved {
-        completionHandler(.success((imageFileURL, videoFileURL)))
+    func handleWrite(isImage: Bool, error: Error?) {
+      completionQueue.async {
+        guard !didComplete else {
+          return
+        }
+        if let error = error {
+          didComplete = true
+          completionHandler(.failure(error))
+          return
+        }
+        if isImage {
+          imageSaved = true
+        } else {
+          videoSaved = true
+        }
+        if imageSaved && videoSaved {
+          didComplete = true
+          completionHandler(.success((imageFileURL, videoFileURL)))
+        }
       }
     }
 
-    // Request to save the image
     resourceManager.writeData(for: imageResource, toFile: imageFileURL, options: nil) { error in
-      if let error = error {
-        completionHandler(.failure(error))
-        return
-      } else {
-        imageSaved = true
-        checkCompletion()
-      }
+      handleWrite(isImage: true, error: error)
     }
 
-    // Request to save the video
     resourceManager.writeData(for: videoResource, toFile: videoFileURL, options: nil) { error in
-      if let error = error {
-        completionHandler(.failure(error))
-        return
-      } else {
-        videoSaved = true
-        checkCompletion()
-      }
+      handleWrite(isImage: false, error: error)
     }
   }
 }
 
 extension PhPickerViewControllerPlugin: UIAdaptivePresentationControllerDelegate {
   public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-    sendResultsToFlutter(results: nil)
+    guard let context = resultContext else {
+      return
+    }
+    guard !context.didFinishPicking else {
+      return
+    }
+    sendResultsToFlutter(context: context, results: nil)
   }
 }
 
@@ -467,7 +536,7 @@ extension PhPickerViewControllerPlugin {
   @available(iOS 15.0, *)
   func parseSelection(s: String) throws -> PHPickerConfiguration.Selection {
     switch s {
-    case "def":
+    case "def", "defaultSelection":
       return .default
     case "ordered":
       return .ordered
