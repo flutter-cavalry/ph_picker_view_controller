@@ -1,3 +1,8 @@
+## 0.9.0
+
+- Fix a race condition when transforming assets.
+- Require UIScene adoption.
+
 ## 0.7.1
 
 - Handle more permission issues.

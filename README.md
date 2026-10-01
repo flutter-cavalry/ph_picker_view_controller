@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/ph_picker_view_controller.svg)](https://pub.dev/packages/ph_picker_view_controller)
 
-A wrapper around iOS `PHPickerViewController` API. (iOS 14+). Can be used to pick or delete photos.
+A wrapper around iOS `PHPickerViewController` API. (iOS 14+). Can be used to pick or delete photos. Requires [UIScene adoption](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate).
 
 ## iOS Configuration
 
