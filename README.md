@@ -4,6 +4,15 @@
 
 A wrapper around iOS `PHPickerViewController` API. (iOS 14+). Can be used to pick or delete photos.
 
+## iOS Configuration
+
+Deleting assets accesses the photo library through PhotoKit. Add `NSPhotoLibraryUsageDescription` to your app's `ios/Runner/Info.plist` with a user-facing explanation, for example:
+
+```xml
+<key>NSPhotoLibraryUsageDescription</key>
+<string>This app uses your photo library to delete assets you select.</string>
+```
+
 ## Usage
 
 ### `pick`
